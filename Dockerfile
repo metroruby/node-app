@@ -1,4 +1,5 @@
 FROM node:12-alpine
+LABEL org.opencontainers.image.source https://github.com/metroruby/node-app
 
 WORKDIR /usr/src/app
 
