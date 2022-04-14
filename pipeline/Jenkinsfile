@@ -1,0 +1,9 @@
+pipeline {
+    stages("Test") {
+        step {
+            script {
+                sh "ls -al && whoami"
+            }
+        }
+    }
+}
