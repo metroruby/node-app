@@ -2,6 +2,7 @@ pipeline {
     stages("Test") {
         step {
             script {
+                print "## test cli #01"
                 sh "ls -al && whoami"
             }
         }
