@@ -1,13 +1,40 @@
 pipeline {
-  agent any
+  agent { node { label "slave-jenkins" } }
+
+  environment {
+    NOW = new Date().format("yyyyMMDDHHmmss")
+
+    BASE_IMG_PUSH_URL = "ghcr.io/metroruby/node-app"
+    IMAGE_TAG = "latest"
+
+    SERVICE_NAME = "node-app"
+  }
 
   stages {
-    stage("Build") {
+    stage("Build & Packaging") {
       steps {
         script {
           nodejs('Node-12') {
             print "Build via NODE-12"
-            sh "node -v"
+            sh "node -v && npm -v && npm install && ls -al"
+            sh "docker-compose build"
+            sh "docker tag ${BASE_IMG_PUSH_URL} ${BASE_IMG_PUSH_URL}:${IMAGE_TAG}"
+            sh '''
+            export CR_PAT=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
+            echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+            '''
+            sh "docker push -a ${BASE_IMG_PUSH_URL}"
+          }
+        }
+      }
+    }
+
+    stage("Deploy") {
+      steps {
+        script {
+          print "## helm update only value"
+          withKubeConfig([credentialsId: 'staging-app-k8s', serverUrl: 'https://35.197.154.217']) {
+            sh "helm upgrade -f k8s/helm/values-staging.yaml ${SERVICE_NAME} ./helm-chart/helm-nodejs"
           }
         }
       }

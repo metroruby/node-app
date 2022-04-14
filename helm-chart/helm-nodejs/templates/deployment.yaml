@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nodejs-app.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nodejs-app.labels" . | nindent 4 }}
+    chart: '{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}'
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  selector:
+    matchLabels:
+      {{- include "nodejs-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+    {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "nodejs-app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "nodejs-app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.volumeSecretMounts }}
+      volumes:
+        {{- range .Values.volumeSecretMounts }}
+        - name: {{ .name }}
+          secret:
+            secretName: {{ .secret.name }}
+            items:
+            - key: {{ .name }}
+              path: {{ .fileName }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.workingDir }}
+          workingDir: {{ .Values.workingDir }}
+          {{- end }}
+          {{- if .Values.command }}
+          command:
+            {{- range .Values.command }}
+            - {{ . }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.env }}
+          env:
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              {{- if .secret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secret.name }}
+                  key: {{ .secret.key | default .name }}
+              {{- else if .configmap }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .configmap.name }}
+                  key: {{ .configmap.key | default .name }}
+              {{- else }}
+              value: {{ .value | quote }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          ports:
+          - containerPort: {{ .Values.service.containerPort }}
+          {{- if .Values.volumeSecretMounts }}
+          volumeMounts:
+            {{- range .Values.volumeSecretMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath | quote }}
+              readOnly: true
+            {{- end }}
+          {{- end }}
+          {{- if not .Values.service.healthCheck.disabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.service.healthCheck.path | default "/" }}
+              port: {{ .Values.service.containerPort | default "80" }}
+            initialDelaySeconds: {{ .Values.service.healthCheck.readinessDelay | default "5" }}
+            timeoutSeconds: {{ .Values.service.healthCheck.timeoutSeconds | default "1" }}
+            periodSeconds: {{ .Values.service.healthCheck.periodSeconds | default "10" }}
+            failureThreshold: {{ .Values.service.healthCheck.failureThreshold | default "3" }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.service.healthCheck.path | default "/" }}
+              port: {{ .Values.service.containerPort | default "80" }}
+            initialDelaySeconds: {{ .Values.service.healthCheck.livenessDelay | default "60" }}
+            timeoutSeconds: {{ .Values.service.healthCheck.timeoutSeconds | default "1" }}
+            periodSeconds: {{ .Values.service.healthCheck.periodSeconds | default "10" }}
+            failureThreshold: {{ .Values.service.healthCheck.failureThreshold | default "3" }}
+          {{- else }}
+          readinessProbe:
+            exec:
+              command:
+              - "true"
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+              - "true"
+            initialDelaySeconds: 60
+            timeoutSeconds: 1
+            periodSeconds: 10
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
