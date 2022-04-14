@@ -1,0 +1,51 @@
+version: "3.9"
+services:
+  reverse_proxy:
+    container_name: reverse_proxy
+    image: nginx:alpine
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - external
+      - internal
+    volumes:
+      - ./conf_nginx:/etc/nginx
+      - ./conf_nginx/logs:/etc/nginx/logs
+  node_service:
+    container_name: node_service
+    image: node-app:latest
+    build:
+      context: .
+    # ports:
+    #   - 8080:8080
+    networks:
+      - internal
+    environment:
+      POSTGRES_HOST: 'db'
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: 'node_service'
+      POSTGRES_PASSWORD: 'Password01'
+      POSTGRES_DB: 'node_db'
+      NODE_SERVER_ENDPOINT_PORT: '8080'
+      WAIT_HOSTS: db:5432
+  db:
+    container_name: db
+    image: postgres:12-alpine
+    # ports:
+    #   - 5432:5432
+    networks:
+      - internal
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: 'node_service'
+      POSTGRES_PASSWORD: 'Password01'
+      POSTGRES_DB: 'node_db'
+
+volumes:
+  db-data:
+
+networks:
+  external:
+  internal:

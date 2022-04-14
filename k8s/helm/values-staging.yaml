@@ -1,0 +1,99 @@
+# Default values for nodejs-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: staging
+
+replicaCount: 2
+image:
+  repository: nginx
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# command:
+#   - echo 'xyz' > /usr/share/nginx/html/index.html
+#   - nginx -g deamon off;
+
+env:
+  
+  # - name: NODE_ENV
+  #   value: prod
+  # - name: NODE_PORT
+  #   value: 80
+  # - name: NODE_API_DOMAIN
+  #   value: https://www.google.com/
+  # - name: DB_USERNAME
+  #   secret:
+  #     name: demo-app-secret
+  #     key: DB_USERNAME
+  # - name: DB_PASSWORD
+  #   secret:
+  #     name: demo-app-secret
+  #     key: DB_PASSWORD
+
+# volumeSecretMounts:
+#   - name: secret-file-dns
+#     mountPath: /var/scr
+#     fileName: SECRET_FILE.pem
+#     secret:
+#       name: demo-app-secret
+
+imagePullSecrets: []
+nameOverride: "nginx-web"
+fullnameOverride: "nginx-web"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: LoadBalancer
+  port: 4000
+  containerPort: 80
+  exposePort: ""
+  path: /
+  healthCheck:
+    path: /
+    livenessDelay: 30
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 64Mi
+  requests:
+    cpu: 100m
+    memory: 32Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 50
+  targetMemoryUtilizationPercentage: 70
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
