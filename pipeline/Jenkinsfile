@@ -4,6 +4,9 @@ pipeline {
   environment {
     NOW = new Date().format("yyyyMMDDHHmmss")
 
+    CR_PAT = credentials('github-token')
+    GITHUB_USER = "metroruby"
+
     BASE_IMG_PUSH_URL = "ghcr.io/metroruby/node-app"
     IMAGE_TAG = "latest"
 
@@ -19,10 +22,7 @@ pipeline {
             sh "node -v && npm -v && npm install && ls -al"
             sh "docker-compose build"
             sh "docker tag ${BASE_IMG_PUSH_URL} ${BASE_IMG_PUSH_URL}:${IMAGE_TAG}"
-            sh '''
-            export CR_PAT=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
-            echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
-            '''
+            sh 'echo ${CR_PAT} | docker login ghcr.io -u ${GITHUB_USER} --password-stdin'
             sh "docker push -a ${BASE_IMG_PUSH_URL}"
           }
         }
@@ -38,6 +38,11 @@ pipeline {
           }
         }
       }
+    }
+  }
+  post {
+    always {
+      sh 'docker logout'
     }
   }
 }
