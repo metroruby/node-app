@@ -4,7 +4,7 @@ pipeline {
         stage("Test") {
             steps {
                 script {
-                    print "### Test #07"
+                    print "### Test #08"
                     sh "ls -al"
                 }
             }
