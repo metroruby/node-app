@@ -1,8 +1,11 @@
 pipeline {
-    stages("Test") {
-        step {
-            script {
-                sh "ls -al && whoami"
+    stages {
+        stage("Test") {
+            steps {
+                script {
+                    print "### Test"
+                    sh "ls -al"
+                }
             }
         }
     }
