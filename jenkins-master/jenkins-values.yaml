@@ -243,6 +243,11 @@ controller:
     - git:4.10.2
     - configuration-as-code:1414.v878271fc496f
     - github:1.34.3
+    - nodejs:1.5.1
+    - envinject:2.854.vfa_1657078c97
+    - ghprb:1.42.2
+    - ws-cleanup:0.41
+    - kubernetes-cli:1.10.3
 
   # Set to false to download the minimum required version of all dependencies.
   installLatestPlugins: true
