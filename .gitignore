@@ -1,2 +1,12 @@
 node_modules
 package-lock.json
+.DS_Store
+
+node-app/terraform/live/staging/credentials.json
+node-app/terraform/live/staging/gcp-gke/.terragrunt-cache/
+node-app/terraform/live/staging/gcp-gke/.terraform.lock.hcl
+node-app/terraform/live/staging/gcp-sql/.terragrunt-cache/
+node-app/terraform/live/staging/gcp-sql/.terraform.lock.hcl
+
+node-app/conf_nginx/logs/access.log
+node-app/conf_nginx/logs/error.log
