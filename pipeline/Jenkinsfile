@@ -7,7 +7,7 @@ pipeline {
     CR_PAT = credentials('github-token')
     GITHUB_USER = "metroruby"
 
-    ENV_CONFIG = "gsa-key.json"
+    GOOGLE_APPLICATION_CREDENTIALS = "/home/ubuntu/gke/gsa-key.json"
 
     BASE_IMG_PUSH_URL = "ghcr.io/metroruby/node-app"
     IMAGE_TAG = "latest"
@@ -18,6 +18,7 @@ pipeline {
   stages {
     stage("Build & Packaging") {
       steps {
+        cleanWs()
         script {
           nodejs('Node-12') {
             print "Build via NODE-12"
@@ -35,12 +36,8 @@ pipeline {
       steps {
         script {
           print "## helm update only value"
-          configFileProvider([configFile(fileId: "${ENV_CONFIG}", variable: 'ENV_CONFIG')]) {
-            sh 'cp "$ENV_CONFIG" gsa-key.json'
-          }
-          sh 'export GOOGLE_APPLICATION_CREDENTIALS=gsa-key.json'
           withKubeConfig([credentialsId: 'staging-app-k8s', serverUrl: 'https://35.197.154.217']) {
-            sh "helm upgrade -f k8s/helm/values-staging.yaml ${SERVICE_NAME} ./helm-chart/helm-nodejs"
+              sh "helm upgrade -f k8s/helm/values-staging.yaml ${SERVICE_NAME} ./helm-chart/helm-nodejs"
           }
         }
       }
