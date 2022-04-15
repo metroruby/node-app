@@ -13,6 +13,8 @@ pipeline {
     IMAGE_TAG = "latest"
 
     SERVICE_NAME = "node-app"
+
+    KUBECONFIG_NAME = "${ENVIRONMENT}-app-k8s"
   }
 
   stages {
@@ -35,8 +37,8 @@ pipeline {
       steps {
         script {
           print "## helm update only value"
-          withKubeConfig([credentialsId: 'staging-app-k8s', serverUrl: 'https://35.197.154.217']) {
-              sh "helm upgrade -f k8s/helm/values-staging.yaml ${SERVICE_NAME} ./helm-chart/helm-nodejs"
+          withKubeConfig([credentialsId: "${KUBECONFIG_NAME}"]) {
+            sh "helm upgrade -f k8s/helm/values-${ENVIRONMENT}.yaml ${SERVICE_NAME} ./helm-chart/helm-nodejs"
           }
         }
       }
