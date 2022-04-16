@@ -1,2 +1,6 @@
 node_modules
 package-lock.json
+.DS_Store
+
+conf_nginx/logs/access.log
+conf_nginx/logs/error.log

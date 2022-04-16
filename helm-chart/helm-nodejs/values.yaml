@@ -6,34 +6,22 @@ namespace: staging
 
 replicaCount: 2
 image:
-  repository: ghcr.io/metroruby/node-app
+  repository: nginx
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: latest
+  tag: ""
 
 # command:
 #   - echo 'xyz' > /usr/share/nginx/html/index.html
 #   - nginx -g deamon off;
 
 env:
-  - name: POSTGRES_HOST
-    value: '10.176.144.3'
-  - name: POSTGRES_PORT
-    value: '5432'
-  - name: POSTGRES_USER
-    value: 'gCgRctkQJC5wR3MR'
-  - name: POSTGRES_PASSWORD
-    value: '8c758d4c22145b5a'
-  - name: POSTGRES_DB
-    value: 'default'
-  - name: NODE_SERVER_ENDPOINT_PORT
-    value: '8080'
-  # - name: NODE_ENV
-  #   value: prod
-  # - name: NODE_PORT
-  #   value: 80
-  # - name: NODE_API_DOMAIN
-  #   value: https://www.google.com/
+  - name: NODE_ENV
+    value: prod
+  - name: NODE_PORT
+    value: 80
+  - name: NODE_API_DOMAIN
+    value: https://www.google.com/
   # - name: DB_USERNAME
   #   secret:
   #     name: demo-app-secret
@@ -50,10 +38,9 @@ env:
 #     secret:
 #       name: demo-app-secret
 
-imagePullSecrets:
-  - name: dockerconfigjson-github-com
-nameOverride: "node-app"
-fullnameOverride: "node-app"
+imagePullSecrets: []
+nameOverride: "nginx-web"
+fullnameOverride: "nginx-web"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -82,7 +69,7 @@ securityContext:
 service:
   type: LoadBalancer
   port: 4000
-  containerPort: 8080
+  containerPort: 80
   exposePort: ""
   path: /
   healthCheck:

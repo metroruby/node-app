@@ -1,0 +1,53 @@
+pipeline {
+  agent { node { label "slave-jenkins" } }
+
+  environment {
+    NOW = new Date().format("yyyyMMDDHHmmss")
+
+    CR_PAT = credentials('github-token')
+    GITHUB_USER = "metroruby"
+
+    GOOGLE_APPLICATION_CREDENTIALS = "/home/ubuntu/gke/gsa-key.json"
+
+    BASE_IMG_PUSH_URL = "ghcr.io/metroruby/node-app"
+    IMAGE_TAG = "latest"
+
+    SERVICE_NAME = "node-app"
+
+    KUBECONFIG_NAME = "${ENVIRONMENT}-app-k8s"
+  }
+
+  stages {
+    stage("Build & Packaging") {
+      steps {
+        script {
+          nodejs('Node-12') {
+            print "Build via NODE-12"
+            sh "node -v && npm -v && npm install && ls -al"
+            sh "docker-compose build"
+            sh "docker tag ${BASE_IMG_PUSH_URL} ${BASE_IMG_PUSH_URL}:${IMAGE_TAG}"
+            sh 'echo ${CR_PAT} | docker login ghcr.io -u ${GITHUB_USER} --password-stdin'
+            sh "docker push -a ${BASE_IMG_PUSH_URL}"
+          }
+        }
+      }
+    }
+
+    stage("Deploy") {
+      steps {
+        script {
+          print "## helm update only value"
+          withKubeConfig([credentialsId: "${KUBECONFIG_NAME}"]) {
+            sh "helm upgrade -f k8s/helm/values-${ENVIRONMENT}.yaml ${SERVICE_NAME} ./helm-chart/helm-nodejs"
+          }
+        }
+      }
+    }
+  }
+  post {
+    always {
+      sh 'docker logout'
+      cleanWs()
+    }
+  }
+}
